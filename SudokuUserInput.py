@@ -1,4 +1,4 @@
-class SudokuValue:
+class SudokuUserInput:
     def __init__(self, x, y, value):
         self.x = x
         self.y = y
@@ -7,7 +7,7 @@ class SudokuValue:
         self.coords = (x, y)
 
     def __repr__(self):
-        return f"User value object with value of {self.value} at {self.coords}"
+        return f"Value object with value of {self.value} at {self.coords}"
 
     def determine_box(self):
         # determines which box each node falls into for 1 to 9 pattern. Numbered from top-left, right then down

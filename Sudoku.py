@@ -2,13 +2,31 @@ from SudokuTreeNode import SudokuTreeNode
 
 
 class Sudoku:
-    # will pass a list of SudokuValue objects. Will also pass a max size for edges/values
     def __init__(self, max_size):
-        self.max_size = max_size
-        self.left_to_fill = self.max_size ** 2
+        self.max_size = max_size  # pass a max size for edge length/values
+        self.left_to_fill = self.max_size ** 2  # solver function stops when left_to_fill == 0
+        self.unavailable_coords = set()  # used to check if location already has a value
+        # value dictionary contains unused values in column/row/box and used coordinates to not be used again
+        # values initially added to dictionary lists so solver function can compare whats left to be added to graph
+        self.available_values_dictionary = {}
+        for x in range(1, self.max_size + 1):
+            column = "x_" + str(x)
+            self.available_values_dictionary[column] = set()
+            for i in range(1, self.max_size + 1):
+                self.available_values_dictionary[column].add(i)
+        for y in range(1, self.max_size + 1):
+            row = "y_" + str(y)
+            self.available_values_dictionary[row] = set()
+            for i in range(1, self.max_size + 1):
+                self.available_values_dictionary[row].add(i)
+        for box in range(1, self.max_size + 1):
+            box_name = "box_" + str(box)
+            self.available_values_dictionary[box_name] = set()
+            for i in range(1, self.max_size + 1):
+                self.available_values_dictionary[box_name].add(i)
         # tree envisioned with root at top, root has 9 children as row 1, columns 1-9. Each column (initial child) then
         # has remaining rows built as children straight down
-        # columns x coordinates, rows y coordinates
+        # columns are x coordinates across from left, rows are y coordinates down from top
         self.root = SudokuTreeNode(0, 0, "root")  # root tree node will not contain a sudoku grid value
         # add initial column of children
         for column in range(1, self.max_size + 1):
@@ -54,50 +72,32 @@ class Sudoku:
         return grid_string
 
     # function alerts user if manually entered value has conflict
-    def check_user_value(self, sudoku_value_object, values_dictionary):
+    def check_user_value(self, sudoku_value_object):
         x = sudoku_value_object.x
         y = sudoku_value_object.y
         box = sudoku_value_object.box
         coords = sudoku_value_object.coords
         value = sudoku_value_object.value
         # check to ensure no value at location and value does not match a value already in same row, column, or box
-        if coords in values_dictionary["coords"]:  # check if those coords have already been used
+        if coords in self.unavailable_coords:  # check if those coords have already been used
             print(f"\nSorry, there's already at a value at {coords}.")
             return False
         # check if column, row, or box have been used
-        elif value not in values_dictionary["x_" + str(x)]:
+        elif value not in self.available_values_dictionary["x_" + str(x)]:
             print(f"\nSorry, there's already a {value} in Column {x}.")
             return False
-        elif value not in values_dictionary["y_" + str(y)]:
+        elif value not in self.available_values_dictionary["y_" + str(y)]:
             print(f"\nSorry, there's already a {value} in Row {y}.")
             return False
-        elif value not in values_dictionary["box_" + str(box)]:
+        elif value not in self.available_values_dictionary["box_" + str(box)]:
             print(f"\nSorry, there's already a {value} in Box {box}.")
             return False
         # otherwise return True
         else:
             return True
 
-    # silently checks value for solver function
-    def check_value(self, sudoku_value_object, values_dictionary):
-        x = sudoku_value_object.x
-        y = sudoku_value_object.y
-        box = sudoku_value_object.box
-        coords = sudoku_value_object.coords
-        value = sudoku_value_object.value
-        # check to ensure no value at location and value does not match a value already in same row, column, or box
-        if coords in values_dictionary["coords"]:  # check if those coords have already been used
-            return False
-        # check if column, row, or box have been used
-        elif value not in values_dictionary["x_" + str(x)] or value not in values_dictionary[
-            "y_" + str(y)] or value not in values_dictionary["box_" + str(box)]:
-            return False
-        # otherwise return True
-        else:
-            return True
-
     # adds values to sudoku grid
-    def add_value(self, sudoku_value_object, values_dictionary):
+    def add_user_value(self, sudoku_value_object):
         x = sudoku_value_object.x
         y = sudoku_value_object.y
         box = sudoku_value_object.box
@@ -111,60 +111,203 @@ class Sudoku:
                 # stop at node in correct row and add value then update all relevant values dictionary lists
                 current_child.value = value
                 self.left_to_fill -= 1
-                values_dictionary["coords"].add(coords)
-                values_dictionary["x_" + str(x)].remove(value)
-                values_dictionary["y_" + str(y)].remove(value)
-                values_dictionary["box_" + str(box)].remove(value)
+                self.unavailable_coords.add(coords)
+                self.available_values_dictionary["x_" + str(x)].remove(value)
+                self.available_values_dictionary["y_" + str(y)].remove(value)
+                self.available_values_dictionary["box_" + str(box)].remove(value)
             else:
                 # otherwise go on to next child
                 current_child_list.append(current_child.children[0])
+
+    def add_solver_value(self, target_node, target_value):
+        target_node.value = target_value
+        target_node.attempted_values.add(target_value)
+        self.left_to_fill -= 1
+        self.unavailable_coords.add(target_node.coords)
+        self.available_values_dictionary["x_" + str(target_node.x)].remove(target_value)
+        self.available_values_dictionary["y_" + str(target_node.y)].remove(target_value)
+        self.available_values_dictionary["box_" + str(target_node.box)].remove(target_value)
+        # print(f"Solver added {target_value} to {target_node.coords}")
+        # print(self)
 
     # removes incorrect values added by solver function
-    def remove_value(self, sudoku_value_object, values_dictionary):
-        x = sudoku_value_object.x
-        y = sudoku_value_object.y
-        box = sudoku_value_object.box
-        coords = sudoku_value_object.coords
-        value = sudoku_value_object.value
-        # start search for correct node at first child node of correct column. subtract 1 from column for index
-        current_child_list = [self.root.children[(x - 1)]]
-        while current_child_list:
-            current_child = current_child_list.pop()
-            if current_child.y == y:
-                # stop at node in correct row and add value then update all relevant values dictionary lists
-                current_child.value = None
-                self.left_to_fill += 1
-                values_dictionary["coords"].remove(coords)
-                values_dictionary["x_" + str(x)].add(value)
-                values_dictionary["y_" + str(y)].add(value)
-                values_dictionary["box_" + str(box)].add(value)
+    def remove_solver_value(self, target_node):
+        value_removed = target_node.value
+        target_node.value = None
+        self.left_to_fill += 1
+        self.unavailable_coords.remove(target_node.coords)
+        self.available_values_dictionary["x_" + str(target_node.x)].add(value_removed)
+        self.available_values_dictionary["y_" + str(target_node.y)].add(value_removed)
+        self.available_values_dictionary["box_" + str(target_node.box)].add(value_removed)
+        # print(f"The solver remove value function removed {value_removed} from {target_node.coords}")
+        # print(self)
+
+    # Functions to determine next target for solver function
+    # first determine which column/row/box has fewest empty values - nearly finished means few possible values
+    def dfs_column_or_row_or_box_target_finder(
+            self):  # values dictionary keeps track of spots where there is NOT a value
+        current_target_string = None
+        current_target_number_to_beat = self.max_size
+        available_values_dictionary_items = self.available_values_dictionary.items()
+        for item in available_values_dictionary_items:
+            number_left_to_fill = len(item[1])  # number of values left in the column/row/box
+            if number_left_to_fill == 0:  # if none left to fill, skip this column/box/row
+                continue
             else:
-                # otherwise go on to next child
-                current_child_list.append(current_child.children[0])
+                if number_left_to_fill < current_target_number_to_beat:  # find shortest list
+                    current_target_string = item[0]
+                    current_target_number_to_beat = number_left_to_fill
+        if current_target_string:  # dummy check to make sure a target was found
+            return current_target_string
+        else:
+            print("Column or row or box finder function didn't find a value \n")
+            return None
 
-    # begin by going to first node without a value
-    # get column, row, box information of node
-    # user intersection set method to make set of values available in all 3 dictionary sets
-    # append first value in intersection set, add value to list of values added by solver
-    # go on to next value
-    # if no items in intersection list, remove most recent value in values added list
-    # try new values in intersection list
-    # stop when left to fill == 0
-    # figure it out. This is hard.
-    def dfs_sudoku_solver(self, root, values_added=None):
-        if values_added is None:
-            values_added = []
-
-    def dfs(self, root, target, path=()):
-        path = path + (root,)
-
-        if root.value == target:
-            return path
-
-        for child in root.children:
-            path_found = self.dfs(child, target, path)
-
-            if path_found is not None:
-                return path_found
-
+    # target node is first node with empty value in target row/column/box
+    def dfs_target_node_finder(self):
+        target_column_or_row_or_box_string = self.dfs_column_or_row_or_box_target_finder()
+        if target_column_or_row_or_box_string:  # column or row or box target finder returns None if unsuccessful
+            # print(f"Target column/row/box is: {target_column_or_row_or_box_string}\n")
+            # first determine if targeting a column, row, or box
+            if target_column_or_row_or_box_string[0] == "x":  # if target is a column
+                x = int(target_column_or_row_or_box_string[2])  # get column number
+                # print(f"target column number: {x}")
+                root_children_copy = self.root.children.copy()
+                current_column_child_list = [root_children_copy[x - 1]]  # check for first empty value in correct column
+                while current_column_child_list:
+                    current_child = current_column_child_list.pop()
+                    if not current_child.value:
+                        target_node = current_child
+                        return target_node
+                    else:
+                        if current_child.children:
+                            current_column_child_list.append(current_child.children[0])
+            elif target_column_or_row_or_box_string[0] == "y":  # if target==row, search whole tree for 1st empty value
+                y = int(target_column_or_row_or_box_string[2])  # get row number
+                # print(f"target row number: {y}")
+                child_list = self.root.children.copy()
+                while child_list:
+                    current_child = child_list.pop(0)
+                    if current_child.y == y and not current_child.value:
+                        target_node = current_child
+                        return target_node
+                    elif current_child.y == y and current_child.value:
+                        continue  # move on to next column once row has been checked
+                    else:  # otherwise add next child in that column to front of list
+                        if current_child.children:
+                            child_list.insert(0, current_child.children[0])
+            elif target_column_or_row_or_box_string[0] == "b":  # if target is a box
+                box = int(target_column_or_row_or_box_string[4])  # get box number
+                # print(f"target box number: {box}")
+                child_list = self.root.children.copy()
+                while child_list:
+                    current_child = child_list.pop(0)
+                    if current_child.box == box and not current_child.value:
+                        target_node = current_child
+                        # print(f"Target node found: {target_node.coords}")
+                        return target_node
+                    else:  # otherwise add next child in that column to front of list
+                        if current_child.children:
+                            child_list.insert(0, current_child.children[0])
+            else:
+                print(
+                    f"There was a problem with the target node finder for " + target_column_or_row_or_box_string + "\n")
+        print("No target node found")
         return None
+
+    # possible node values are all values not yet placed in that row, column, or box
+    # will use first value in list of possible node values that isn't in the attempted_values list for this iteration
+    def dfs_determine_target_node_value(self, target_node):
+        # print(f"Target node is: {target_node}")
+        possible_column_values = self.available_values_dictionary["x_" + str(target_node.x)]
+        possible_row_values = self.available_values_dictionary["y_" + str(target_node.y)]
+        possible_box_values = self.available_values_dictionary["box_" + str(target_node.box)]
+        # possible node values is the set of values that are all listed in the possible column, row, and box values
+        possible_node_values = possible_column_values.intersection(possible_row_values, possible_box_values)
+        # print(f"Possible node values are {possible_node_values} and values already attempted are {target_node.attempted_values}")
+        if possible_node_values and possible_node_values != target_node.attempted_values:  # if not all possible values have been attempted
+            # print("There are possible node values not yet attempted")
+            for value in possible_node_values:
+                if value not in target_node.attempted_values:  # attempt to use first value not yet attempted
+                   #  print(f"Will attempt to place a {value} at {target_node.coords}")
+                    return value  # return the Sudoku target object
+        # if all possible values for target have been attempted, solver f'n must remove the node previous
+        elif possible_node_values and possible_node_values == target_node.attempted_values:
+            #print("Possible nodes found but all have been attempted")
+            # to target and try new value there. Also must clear the attempted values list for target node
+            return "All potential values attempted"
+        # if unable to find any possible node values, previous node will need to be removed by solver
+        else:
+            # print("No value possible")
+            return "No value possible"
+
+    def dfs_sudoku_solver(self, nodes_with_values_added_by_solver=None, manual_target_node=None):
+        if nodes_with_values_added_by_solver is None:  # keep track of values added so incorrect values can be removed
+            nodes_with_values_added_by_solver = []
+
+        # base case
+        if self.left_to_fill == 0:
+            print("\nYour Sudoku puzzle has been solved!\n")
+            return self  # printing the solved sudoku object will display the completed puzzle
+
+        # manual targeting used when node values have been cleared and new values need to be tried at that location
+        if manual_target_node:
+            # print("Not using the target node finder function")
+            target_node = manual_target_node
+
+        else:
+            # rint("Using the target node finder function")
+            target_node = self.dfs_target_node_finder() # returns None if no appropriate target node could be found
+
+        if not target_node:  # if no target node found by finder function, placed values need to be removed and replaced
+            # print("No target node was found. Will have to remove values and try new ones")
+            most_recent_solver_node = nodes_with_values_added_by_solver.pop()
+            self.remove_solver_value(most_recent_solver_node) # clear value from most recent placement
+            # check to see if another value can be placed at that location
+            node_target_value = self.dfs_determine_target_node_value(most_recent_solver_node)
+            # determine target node value returns an int type value if one found, otherwise returns a string detailing what went wrong
+            if type(node_target_value) == int: # if another value can be tried at that location, add it and continue function
+               #  print(f"found another possible node for {most_recent_solver_node.coords}")
+                self.add_solver_value(most_recent_solver_node, node_target_value)
+                # update nodes added by solver list
+                nodes_with_values_added_by_solver.append(most_recent_solver_node)
+                return self.dfs_sudoku_solver(nodes_with_values_added_by_solver)
+            else:  # if no more values left to try at current location, clear attempted values list and remove value
+                # from next previous node, run function again
+                # print("didn't find possible node values that haven't been attempted")
+                most_recent_solver_node.attempted_values.clear()
+                # print(f"cleared attempted values for {most_recent_solver_node}, attempted values are now {most_recent_solver_node.attempted_values}")
+                previously_placed_node_that_needs_new_value = nodes_with_values_added_by_solver.pop()
+                self.remove_solver_value(previously_placed_node_that_needs_new_value)
+                # node could have more available values or not, just run function again
+                return self.dfs_sudoku_solver(
+                    nodes_with_values_added_by_solver, previously_placed_node_that_needs_new_value)
+
+        # if target node was found by finder function, determine value to try for that node
+        target_value = self.dfs_determine_target_node_value(target_node)
+
+        if target_value == "No value possible":  # if no value possible at target node, remove prev node and try new
+            # value at that location
+            if nodes_with_values_added_by_solver:
+                most_recent_solver_node = nodes_with_values_added_by_solver.pop()
+                self.remove_solver_value(most_recent_solver_node)
+                return self.dfs_sudoku_solver(nodes_with_values_added_by_solver)  # recursively run function
+            else:
+                print("Nothing to pop when target has no value possible\n")
+
+        # if all values have been attempted at the target node, clear attempted values list for target node, then
+        # remove node prev to target and try new value there
+        elif target_value == "All potential values attempted":
+            target_node.attempted_values.clear()
+            # print(f"Cleared attempted values list at {target_node.coords}")
+            if nodes_with_values_added_by_solver:
+                next_solver_node_to_remove = nodes_with_values_added_by_solver.pop()
+                self.remove_solver_value(next_solver_node_to_remove)
+                return self.dfs_sudoku_solver(nodes_with_values_added_by_solver)
+            else:
+                print("Nothing to pop when all possible values have been attempted\n")
+
+        else:  # if target node & value found, add the value to that node and update nodes added by solver list
+            self.add_solver_value(target_node, target_value)
+            nodes_with_values_added_by_solver.append(target_node)
+            return self.dfs_sudoku_solver(nodes_with_values_added_by_solver)

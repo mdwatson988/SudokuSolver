@@ -6,6 +6,7 @@ class SudokuTreeNode:
         self.y = y # row location
         self.coords = (x, y)
         self.box = self.determine_box() # sub box containing node
+        self.attempted_values = set() # values not to try again at particular step in solver function
 
     def __repr__(self):
         return f"Tree node with a value of {self.value} at {self.coords}"
