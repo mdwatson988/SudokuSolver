@@ -46,7 +46,8 @@ def set_starting_board(sudoku_object, previous_board):
                     sudoku_object.add_user_value(starting_value)
                 break
             elif previous_board:
-                print("\nCurrent board size doesn't match previous board size. Please press 'N' to input your own starting board.")
+                print(
+                    "\nCurrent board size doesn't match previous board size. Please press 'N' to input your own starting board.")
             else:
                 print(
                     "\nThere is not yet a saved starting board. Please press 'N' to input your own starting board.")
@@ -76,7 +77,8 @@ def add_row_user_starting_input(sudoku_object):
                         print(f"There is already a value in row {row_number}, column {column}.")
                     else:
                         while True:
-                            value_input = input(f"Input the value for row {row_number}, column {column} or press 'X' to skip this location: ")
+                            value_input = input(
+                                f"Input the value for row {row_number}, column {column} or press 'X' to skip this location: ")
                             if value_input.upper() == "X":
                                 break
                             else:
@@ -86,15 +88,17 @@ def add_row_user_starting_input(sudoku_object):
                                         new_user_value = SudokuUserInput(column, row_number, value, sudoku_object)
                                         # ensure value entered is a valid entry
                                         check_value_results = sudoku_object.check_user_value(new_user_value)
-                                        if check_value_results: # if valid entry, add value to sudoku object
+                                        if check_value_results:  # if valid entry, add value to sudoku object
                                             sudoku_object.add_user_value(new_user_value)
                                             break
                                         else:
-                                            print(f"\nYou input a non-valid value at column {column}. Please try again.")
+                                            print(
+                                                f"\nYou input a non-valid value at column {column}. Please try again.")
                                     else:
                                         print(f"\nPlease input a value no lower than 1 and no greater than {max_size}.")
                                 except ValueError:
-                                    print(f"\nPlease input a whole number no lower than 1 and no greater than {max_size}.")
+                                    print(
+                                        f"\nPlease input a whole number no lower than 1 and no greater than {max_size}.")
                 break
             else:
                 print(f"\nPlease input a row number no lower than 1 and no greater than {max_size}.")
@@ -115,7 +119,8 @@ def add_column_user_starting_input(sudoku_object):
                         print(f"There is already a value in column {column_number}, row {row}.")
                     else:
                         while True:
-                            value_input = input(f"Input the value for column {column_number}, row {row} or press 'X' to skip this location: ")
+                            value_input = input(
+                                f"Input the value for column {column_number}, row {row} or press 'X' to skip this location: ")
                             if value_input.upper() == "X":
                                 break
                             else:
@@ -125,7 +130,7 @@ def add_column_user_starting_input(sudoku_object):
                                         new_user_value = SudokuUserInput(column_number, row, value, sudoku_object)
                                         # ensure value entered is a valid entry
                                         check_value_results = sudoku_object.check_user_value(new_user_value)
-                                        if check_value_results: # if valid entry, add value to sudoku object
+                                        if check_value_results:  # if valid entry, add value to sudoku object
                                             sudoku_object.add_user_value(new_user_value)
                                             break
                                         else:
@@ -133,7 +138,8 @@ def add_column_user_starting_input(sudoku_object):
                                     else:
                                         print(f"\nPlease input a value no lower than 1 and no greater than {max_size}.")
                                 except ValueError:
-                                    print(f"\nPlease input a whole number no lower than 1 and no greater than {max_size}.")
+                                    print(
+                                        f"\nPlease input a whole number no lower than 1 and no greater than {max_size}.")
                 break
             else:
                 print(f"\nPlease input a column number no lower than 1 and no greater than {max_size}.")
@@ -163,13 +169,15 @@ def add_single_user_starting_input(sudoku_object):
                     print(f"\nPlease input coordinates and values no lower than 1 and no greater than {max_size}.")
             except ValueError:
                 print(
-                    f"\nPlease input whole numbers no lower than 1 and no greater than {max_size} for coordinates and values.")
+                    f"\nPlease input whole numbers no lower than 1 and no greater than {max_size} for coordinates and "
+                    f"values.")
 
 
 def set_start_size():
     while True:
-        start_size_input = input("\nWould you like a 4x4, 9x9, or 16x16 sudoku puzzle solved? Please press '9' to use the test board."
-                                 "\nPress '4', '9', or '16': ")
+        start_size_input = input(
+            "\nWould you like a 4x4, 9x9, or 16x16 sudoku puzzle solved? Please press '9' to use the test board."
+            "\nPress '4', '9', or '16': ")
         try:
             start_size = int(start_size_input)
             if start_size == 4 or start_size == 9 or start_size == 16:
@@ -182,14 +190,15 @@ def set_start_size():
 
 def save_starting_board(sudoku_object, save_file_path):
     while True:
-        save_current_sudoku_object_input = input("\nWould you like to save the starting board to a .txt file for later access?"
-                                                 " Press 'Y' for Yes or 'N' for No: ")
+        save_current_sudoku_object_input = input(
+            "\nWould you like to save the starting board to a .txt file for later access?"
+            " Press 'Y' for Yes or 'N' for No: ")
         # if user wants to save the results
         if save_current_sudoku_object_input.upper() == "Y":
             # open existing txt file using path from files.py
             text_file = open(save_file_path, 'a')
             # write the results string to a new line on the file
-            start_board_save_string = (f"\nStarting board: {sudoku_object}\n")
+            start_board_save_string = f"\nStarting board: {sudoku_object}\n"
             text_file.write(start_board_save_string)
             # close the file then break out of loop
             text_file.close()
@@ -202,14 +211,15 @@ def save_starting_board(sudoku_object, save_file_path):
 
 def save_solved_board(sudoku_object, save_file_path):
     while True:
-        save_current_sudoku_object_input = input("\nWould you like to save the solved board to a .txt file for later access?"
-                                                 " Press 'Y' for Yes or 'N' for No: ")
+        save_current_sudoku_object_input = input(
+            "\nWould you like to save the solved board to a .txt file for later access?"
+            " Press 'Y' for Yes or 'N' for No: ")
         # if user wants to save the results
         if save_current_sudoku_object_input.upper() == "Y":
             # open existing txt file using path from files.py
             text_file = open(save_file_path, 'a')
             # write the results string to a new line on the file
-            solved_board_save_string = (f"\nSolved board: {sudoku_object}\n")
+            solved_board_save_string = f"\nSolved board: {sudoku_object}\n"
             text_file.write(solved_board_save_string)
             # close the file then break out of loop
             text_file.close()
@@ -237,7 +247,7 @@ previous_starting_board = None
 # outer loop that keeps program running
 while True:
     sudoku = Sudoku(set_start_size())  # instantiate a new Sudoku object
-    while True: # this loops ensures values have been added before solver starts
+    while True:  # this loops ensures values have been added before solver starts
         set_starting_board(sudoku, previous_starting_board)  # add beginning sudoku values
         if sudoku.values_added:
             previous_starting_board = sudoku.starting_board  # save most recent starting board

@@ -5,8 +5,8 @@ from math import sqrt
 class Sudoku:
     def __init__(self, max_size):
         self.max_size = max_size  # pass a max size for edge length/values
-        self.starting_board = [[], max_size] # list in index 0 holds sudoku user inputs, index 1 holds starting size
-        self.values_added = False # set to True after first user value added - prevents solver from trying blank puzzle
+        self.starting_board = [[], max_size]  # list in index 0 holds sudoku user inputs, index 1 holds starting size
+        self.values_added = False  # set to True after first user value added - prevents solver from trying blank puzzle
         self.left_to_fill = self.max_size ** 2  # solver function stops when left_to_fill == 0
         self.unavailable_coords = set()  # used to check if location already has a value
         # value dictionary contains unused values in column/row/box and used coordinates to not be used again
@@ -69,7 +69,7 @@ class Sudoku:
         horizontal_line = ("-" * 3 * box_size) + (("|" + ("-" * 3 * box_size)) * (box_size - 1))
         for y in grid_dictionary.keys():
             for number in grid_dictionary[y]:
-                if y_counter < self.max_size and y_counter % box_size != 0: # add value only
+                if y_counter < self.max_size and y_counter % box_size != 0:  # add value only
                     grid_string += (str(number) + "  ")
                     y_counter += 1
                 # every 3 values that aren't the end of the puzzle, add vertical line for boxes
@@ -131,7 +131,7 @@ class Sudoku:
                 current_child.value = value
                 self.left_to_fill -= 1
                 self.starting_board[0].append(sudoku_user_input_object)
-                self.values_added = True # allows solver function to run when set to True
+                self.values_added = True  # allows solver function to run when set to True
                 self.unavailable_coords.add(coords)
                 self.available_values_dictionary["x_" + str(x)].remove(value)
                 self.available_values_dictionary["y_" + str(y)].remove(value)

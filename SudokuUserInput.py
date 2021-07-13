@@ -10,7 +10,7 @@ class SudokuUserInput:
         return f"Value object with value of {self.value} at {self.coords}"
 
     def determine_box(self, sudoku_object):
-        if not sudoku_object: # No sudoku object passed when using test puzzle
+        if not sudoku_object:  # No sudoku object passed when using test puzzle
             max_size = 9
         else:
             max_size = sudoku_object.max_size

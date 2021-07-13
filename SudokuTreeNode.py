@@ -2,11 +2,11 @@ class SudokuTreeNode:
     def __init__(self, sudoku_object, x, y, value=None):
         self.value = value  # data
         self.children = []  # references to child nodes
-        self.x = x # column location
-        self.y = y # row location
+        self.x = x  # column location
+        self.y = y  # row location
         self.coords = (x, y)
-        self.box = self.determine_box(sudoku_object) # sudoku box in which the node falls
-        self.attempted_values = set() # values not to try again at particular step in solver function
+        self.box = self.determine_box(sudoku_object)  # sudoku box in which the node falls
+        self.attempted_values = set()  # values not to try again at particular step in solver function
 
     def __repr__(self):
         return f"Tree node with a value of {self.value} at {self.coords}"
@@ -61,7 +61,7 @@ class SudokuTreeNode:
                     return 2
                 if 9 <= self.x <= 12:
                     return 3
-                if 13 <= self.x <=16:
+                if 13 <= self.x <= 16:
                     return 4
             if 5 <= self.y <= 8:
                 if 1 <= self.x <= 4:
